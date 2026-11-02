@@ -55,6 +55,8 @@ public/            Copied as-is into dist/: PWA manifest, service worker (sw.js)
                    full-bleed (phones crop home-screen icons); favicon.svg is the rounded browser-tab version.
 ```
 
+**Hosting:** live at https://podkriznik.github.io/tally/ (repo github.com/podkriznik/tally, public). `.github/workflows/deploy.yml` runs the tests, builds and publishes `dist/` to GitHub Pages on every push to `main`. Git in this repo uses a repo-local personal identity (GitHub no-reply email), and the remote URL carries the `podkriznik` username so Git Credential Manager uses the personal login. The machine's global identity and saved GitHub login belong to the owner's employer; never commit or push with them. Commit messages carry no Claude co-author line.
+
 **PWA:** `main.js` registers `sw.js` only in production builds served over http(s), so dev, file:// and the artifact skip it. Service workers need HTTPS (localhost is exempt), so offline use on the phone needs a hosted build. Bump `VERSION` in `sw.js` when you change its caching logic.
 
 ## Conventions
@@ -94,8 +96,6 @@ The chart snapshots in `tests/__snapshots__/` pin the exact strategy. If you cha
 - When revising docs, the owner prefers being told what to change and where over getting a regenerated file.
 
 ## Ideas backlog (not started)
-
-- Host on GitHub Pages from the owner's personal GitHub account (public repo; free Pages needs one), so the PWA installs on the phone. Before the first commit, set a personal identity with `git config --local` (the global one is the work email; prefer the GitHub no-reply address). Then add a GitHub Actions workflow that runs the tests, builds and deploys `dist/`, and turn on Settings → Pages → Source: GitHub Actions. `gh` isn't installed, so the owner creates the empty repo on github.com. Needs: username, commit email, repo name.
 
 - Bankroll view for bet practice: win rate and risk of ruin for the chosen ramp (betting itself is done)
 - Counting with the other players' cards shown only briefly

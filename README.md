@@ -1,6 +1,8 @@
-# Tally
+# tally/
 
-A personal blackjack trainer: basic strategy, Hi-Lo counting, index plays and a house edge simulator.
+A personal blackjack trainer: basic strategy, Hi-Lo counting, index plays, bet practice and a house edge simulator.
+
+**Live: https://podkriznik.github.io/tally/** (installable, works offline). Every push to `main` runs the tests and redeploys.
 
 ## Setup
 
