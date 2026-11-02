@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Tally mark: four strokes crossed by a gold slash. Full-bleed felt so it also works as a maskable
+       icon; everything stays inside the central 80% circle. Same geometry as the header mark (×21.33). -->
+  <defs>
+    <radialGradient id="felt" cx="50%" cy="0%" r="100%">
+      <stop offset="0" stop-color="#5a3594"/>
+      <stop offset="1" stop-color="#351c5e"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#felt)"/>
+  <g stroke-linecap="round" fill="none">
+    <path d="M160 139v234M224 139v234M288 139v234M352 139v234" stroke="#fff" stroke-width="36"/>
+    <path d="M117 341L395 171" stroke="#f0b429" stroke-width="40"/>
+  </g>
+</svg>

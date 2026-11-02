@@ -1,0 +1,21 @@
+{
+  "name": "tally",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open",
+    "dev:host": "vite --host",
+    "build": "vitest run && vite build",
+    "build:single": "vitest run && vite build --mode single",
+    "open": "npm run build:single && start \"\" dist\\index.html",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vite": "5.4.11",
+    "vite-plugin-singlefile": "2.0.3",
+    "vitest": "2.1.8"
+  }
+}

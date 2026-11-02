@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f4f8">
+  <title>tally/</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="tally">
+  <!-- apply a forced theme before first paint (main.js owns the toggle) -->
+  <script>try { var t = JSON.parse(localStorage.getItem('tally_theme')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}</script>
+  <!-- Splash, covering the page until the app is ready (styles inline so it shows before the app's CSS/JS).
+       First open in a session: the full intro on purple. Later loads (html.quick): a small looping
+       version of the logo assembling, on the page background, as a loader. main.js fades it out. -->
+  <!-- ?intro in the URL forces the full intro on every load (for testing) -->
+  <!-- During the full intro (html.intro) the page background and theme-color are purple too, so iOS
+       paints the status bar / Dynamic Island area to match; main.js restores both afterwards. -->
+  <script>try {
+    var h = document.documentElement;
+    if (sessionStorage.getItem('tally_intro') && !/[?&]intro\b/.test(location.search)) h.classList.add('quick');
+    else {
+      sessionStorage.setItem('tally_intro', '1');
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) { h.classList.add('intro'); document.querySelector('meta[name=theme-color]').content = '#3f2469'; }
+    }
+  } catch (e) {}</script>
+  <style>
+    html.intro,html.intro body{background:#3f2469}
+    #splash{position:fixed;inset:0;z-index:100;display:grid;place-content:center;justify-items:center;gap:0;
+      background:#3f2469 radial-gradient(circle 300px at 50% 46%,#5a3594,#3f2469); /* glow behind the logo, flat at every edge (matches the status bar) */transition:opacity .35s ease,visibility .35s;cursor:pointer}
+    #splash.out{opacity:0;visibility:hidden}
+    #splash svg{width:176px;height:176px;margin-top:-30px;overflow:visible}
+    #splash .tile{display:none}
+    /* strokes are drawn top to bottom one by one, then the slash strikes through */
+    #splash path{fill:none;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:sdraw .2s ease-out forwards}
+    #splash .s{stroke:#fff;stroke-width:1.7}
+    #splash .s:nth-child(2){animation-delay:.1s}#splash .s:nth-child(3){animation-delay:.24s}
+    #splash .s:nth-child(4){animation-delay:.38s}#splash .s:nth-child(5){animation-delay:.52s}
+    #splash .sl{stroke:#f0b429;stroke-width:1.9;animation-duration:.26s;animation-delay:.74s}
+    #splash .wm{font:700 34px/1 ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;letter-spacing:-.04em;color:#fff;
+      opacity:0;transform:translateY(6px);animation:sfade .3s ease-out .98s forwards}
+    #splash .wm b{color:#f0b429}
+    @keyframes sdraw{to{stroke-dashoffset:0}}
+    @keyframes sfade{to{opacity:1;transform:none}}
+    /* quick loader: page background, the mark on a purple tile, strokes + slash redraw in a 0.9 s loop */
+    .quick #splash{background:#f5f4f8;transition-duration:.2s}
+    .quick[data-theme=dark] #splash{background:#100e14}
+    @media (prefers-color-scheme:dark){.quick:not([data-theme=light]) #splash{background:#100e14}}
+    .quick #splash svg{width:64px;height:64px;margin:0}
+    .quick #splash .tile{display:block;fill:#4f2d84}
+    .quick #splash .wm{display:none}
+    .quick #splash path{animation:qdraw .9s ease-out infinite}
+    .quick #splash .s:nth-child(2){animation-delay:0s}.quick #splash .s:nth-child(3){animation-delay:.08s}
+    .quick #splash .s:nth-child(4){animation-delay:.16s}.quick #splash .s:nth-child(5){animation-delay:.24s}
+    .quick #splash .sl{animation-delay:.34s}
+    @keyframes qdraw{0%{stroke-dashoffset:1;opacity:1}18%,80%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+    @media (prefers-reduced-motion:reduce){#splash{display:none}}
+  </style>
+</head>
+<body>
+  <div id="splash" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><rect class="tile" width="24" height="24" rx="6.5"/><path class="s" pathLength="1" d="M7.5 6.5v11"/><path class="s" pathLength="1" d="M10.5 6.5v11"/><path class="s" pathLength="1" d="M13.5 6.5v11"/><path class="s" pathLength="1" d="M16.5 6.5v11"/><path class="sl" pathLength="1" d="M5.5 16L18.5 8"/></svg>
+    <div class="wm">tally<b>/</b></div>
+  </div>
+  <header>
+    <div class="top"><h1><svg class="mk" width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6.5"/><g stroke-linecap="round" fill="none"><path d="M7.5 6.5v11M10.5 6.5v11M13.5 6.5v11M16.5 6.5v11" stroke="#fff" stroke-width="1.7"/><path class="sl" d="M5.5 16L18.5 8" stroke-width="1.9"/></g></svg><span class="wm">tally<b>/</b></span></h1><small id="rulesum"></small><button class="tbtn glass" id="prog" data-a="progress" aria-label="Progress" title="Progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20h16M7 16v-4M12 16V7M17 16v-7"/></svg></button><button class="tbtn glass" id="gear" data-a="settings"></button></div>
+    <nav id="tabs"></nav>
+    <div id="toast" role="status" aria-live="polite" hidden></div>
+  </header>
+  <main id="view"></main>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

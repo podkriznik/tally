@@ -1,0 +1,434 @@
+:root{
+  /* layout: one column, max 760px; tabs on top (a floating glass bar at the bottom on phones); decisions as casino chips.
+     Theme: light/dark via light-dark(); follows the OS unless <html data-theme> forces one. */
+  color-scheme:light dark;
+  /* palette: purple and gold. Neutrals carry a faint purple tint; gold is the accent;
+     green/red (good/bad) and the chip colors keep their meaning and stay as they are. */
+  --bg:light-dark(#f5f4f8,#100e14);
+  --surface:light-dark(#ffffff,#1b1822);
+  --surface2:light-dark(#ecebf2,#26222f); --surface2h:light-dark(#e1dfea,#302b3a);
+  --seg:light-dark(#e8e6ef,#221f2a); --segOn:light-dark(#ffffff,#3b3646);
+  --line:light-dark(#e3e1ea,#2c2835);
+  --ink:light-dark(#1c1a22,#f0eef4);
+  --muted:light-dark(#6c6878,#a29dac);
+  --accent:light-dark(#dd9d1c,#f0b429); --onAccent:#2a1d00;
+  --good:light-dark(#1f8a4f,#4cc38a); --bad:light-dark(#c8373a,#ff7b72); --warn:light-dark(#a06a0a,#f0b429);
+  --brand:#4f2d84;
+  --feltA:light-dark(#4f2d84,#3f2369); --feltB:light-dark(#351c5e,#24133f);
+  /* glass material (iOS "Liquid Glass" style), used by .glass and the phone tab bar: translucent fill,
+     strong blur + saturation, a bright top edge, a faint light rim and a soft gloss on the upper half */
+  --glass:light-dark(rgba(250,249,253,.5),rgba(38,34,46,.5));
+  --glassHi:light-dark(rgba(255,255,255,.9),rgba(255,255,255,.24));
+  --glassRim:light-dark(rgba(255,255,255,.55),rgba(255,255,255,.1));
+  --glassGloss:light-dark(rgba(255,255,255,.4),rgba(255,255,255,.07));
+  --glassShadow:0 10px 30px rgba(24,12,48,.14),0 1px 3px rgba(24,12,48,.1);
+  --cardBack:repeating-linear-gradient(45deg,#3b1f66,#3b1f66 5px,#4c2b80 5px,#4c2b80 10px);
+  /* action colors: chips, chart cells, legend */
+  --cH:light-dark(#22905a,#2f9e66); --cS:light-dark(#cf3d40,#cf4446); --cD:light-dark(#cf9118,#d09a22);
+  --cP:light-dark(#3a5cc8,#4467d1); --cR:light-dark(#6a717b,#6b737d);
+  --chipOff:light-dark(#e5e3ec,#27232f);
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,Roboto,sans-serif;
+}
+/* always reserve the scrollbar's width so the centered layout doesn't shift when a page starts to scroll */
+html{scrollbar-gutter:stable}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+/* never scroll sideways: a sliding view or flying card must not make iOS wobble the page horizontally.
+   clip (not hidden) keeps the sticky header working */
+html,body{overflow-x:clip}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding-top:env(safe-area-inset-top,0px);padding-bottom:10px}
+.top{max-width:760px;margin:0 auto;padding:12px 16px 0;display:flex;align-items:center;gap:10px}
+.top h1{font-family:var(--display);font-size:21px;margin:0;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+/* logo: tally-mark icon + lowercase monospace wordmark with a gold slash */
+/* both slashes use --accent, the same gold as primary buttons, in each theme */
+.mk{width:26px;height:26px;flex:none;display:block}
+.mk .sl{stroke:var(--accent)}
+.mk rect{fill:var(--brand)}
+.wm{font-family:var(--mono);font-weight:700;font-size:21px;letter-spacing:-.04em}
+.wm b{color:var(--accent);font-weight:700;margin-left:.04em}
+.top small{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tbtn{margin-left:auto;flex:0 0 auto;width:36px;height:36px;border-radius:99px;border:0;color:var(--muted);display:grid;place-items:center;cursor:pointer;padding:0}
+.tbtn:hover{color:var(--ink)}
+.tbtn+.tbtn{margin-left:6px} /* progress + settings sit together at the right */
+.tbtn svg{width:18px;height:18px}
+.tbtn.on{background:var(--ink);color:var(--bg)}
+/* segmented control: the tab bar and the theme picker in Settings */
+nav,.seg{display:flex;padding:3px;background:var(--seg);border-radius:11px;overflow-x:auto;scrollbar-width:none}
+nav{max-width:728px;margin:10px max(16px,calc((100% - 728px) / 2)) 0}
+nav::-webkit-scrollbar,.seg::-webkit-scrollbar{display:none}
+nav button,.seg button{flex:1 0 auto;background:none;border:0;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;padding:7px 8px;border-radius:8px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+nav button:hover,.seg button:hover{color:var(--ink)}
+.seg button.on{color:var(--ink)}
+/* segmented pickers: the highlight is a .ind pill that main.js (segPills) places and slides under the selected option */
+.seg{position:relative}
+.seg button{position:relative;z-index:1}
+.seg .ind{position:absolute;top:3px;bottom:3px;left:0;border-radius:8px;background:var(--segOn);box-shadow:0 1px 2px rgba(0,0,0,.1);pointer-events:none}
+/* The selected tab is a brand-purple pill (gold stays reserved for primary actions). It's one element,
+   .ind, that main.js sizes and moves under the selected button, so it glides from tab to tab. */
+nav{position:relative}
+nav button{position:relative;z-index:1}
+nav button .ti{display:none} /* icons only on phones (see the phone block) */
+nav button.on,nav button.on:hover{background:none;color:#fff;box-shadow:none}
+nav .ind{position:absolute;top:3px;bottom:3px;left:0;border-radius:8px;background:var(--brand);pointer-events:none;
+  transition:transform .32s cubic-bezier(.3,.8,.3,1),width .32s cubic-bezier(.3,.8,.3,1),opacity .2s}
+nav .ind.off{opacity:0}
+nav:not([data-ready="1"]) .ind{transition:none}
+@media (prefers-reduced-motion:reduce){nav .ind{transition:none}}
+/* glass surface (see the --glass tokens): floating controls */
+.glass,#toast{background-color:var(--glass);background-image:linear-gradient(180deg,var(--glassGloss),transparent 55%);
+  -webkit-backdrop-filter:blur(18px) saturate(1.8);backdrop-filter:blur(18px) saturate(1.8);
+  box-shadow:inset 0 1px 0 var(--glassHi),inset 0 0 0 1px var(--glassRim),var(--glassShadow)}
+/* phones: the tab bar floats at the bottom within thumb reach, as a glass capsule; the selected tab is a
+   brighter glass pill inside it. Content scrolling behind it shows through, blurred. */
+@media (max-width:640px){
+  nav{position:fixed;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);margin:0;z-index:6;padding:5px;border-radius:999px;
+    background-color:var(--glass);background-image:linear-gradient(180deg,var(--glassGloss),transparent 55%);
+    -webkit-backdrop-filter:blur(18px) saturate(1.8);backdrop-filter:blur(18px) saturate(1.8);
+    box-shadow:inset 0 1px 0 var(--glassHi),inset 0 0 0 1px var(--glassRim)} /* no drop shadow under the tab bar */
+  nav button{padding:7px 4px 6px;font-size:11.5px;border-radius:999px;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.1}
+  nav button .ti{display:block;width:21px;height:21px}
+  nav .ind{top:5px;bottom:5px;border-radius:999px;background:color-mix(in srgb,var(--brand) 90%,transparent);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.12)}
+  /* room to scroll the last item clear of the tab bar (~60px incl. its offset) and, in Safari, the
+     floating search bar below it that the page also scrolls behind (~80px) */
+  main#view{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 170px)} /* #view: must beat the later base main{padding:…} */
+}
+main{max-width:760px;margin:0 auto;padding:6px 16px 24px;display:flex;flex-direction:column;gap:12px}
+/* .side groups what follows the felt (Table, Drill). It's invisible to layout by default... */
+.side{display:contents}
+/* ...and on wide screens it becomes the right column: felt left, chips / feedback / panels right.
+   The header and tab bar are this wide on every tab, so they don't resize when you switch; only the
+   Table and Drill content (and their toast) go wide. */
+@media (min-width:1000px){
+  .top{max-width:1100px}
+  nav{max-width:1068px;margin-inline:max(16px,calc((100% - 1068px) / 2))}
+  body:is([data-tab=table],[data-tab=drill]) main{max-width:1100px}
+  body:is([data-tab=table],[data-tab=drill]) #toast{max-width:1068px}
+  body:is([data-tab=table],[data-tab=drill]) main{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(330px,1fr);gap:16px 22px;align-items:start}
+  body:is([data-tab=table],[data-tab=drill]) main>*{grid-column:1/-1}
+  body:is([data-tab=table],[data-tab=drill]) main>.felt{grid-column:1} /* not sticky: it would ride over the full-width panels below */
+  body:is([data-tab=table],[data-tab=drill]) main>.side{grid-column:2;display:flex;flex-direction:column;gap:12px;align-self:center} /* centered against the felt */
+  body:is([data-tab=table],[data-tab=drill]) main>.felt .pc:not(.seats .pc){width:62px;height:88px}
+  body:is([data-tab=table],[data-tab=drill]) main>.felt .pc:not(.seats .pc) b{font-size:22px}
+  body:is([data-tab=table],[data-tab=drill]) main>.felt .cards:not(.seats .cards){min-height:88px}
+}
+/* Phone in landscape (wide but short): the same felt | chips columns, plus a compact header, stats strip,
+   cards and chips so a hand and its decision fit on one screen. Content keeps clear of the notch. */
+@media (orientation:landscape) and (max-height:520px) and (min-width:600px){
+  header{padding-bottom:6px}
+  .top{padding-top:6px;padding-inline:max(16px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right))}
+  nav{margin-top:6px}
+  nav button{padding:5px 8px}
+  main#view{padding-inline:max(16px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right))}
+  .stats{padding:5px 4px}
+  .stats b{font-size:15px}
+  body:is([data-tab=table],[data-tab=drill]) main{max-width:none;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(290px,1fr);gap:10px 18px;align-items:start}
+  body:is([data-tab=table],[data-tab=drill]) main>*{grid-column:1/-1}
+  body:is([data-tab=table],[data-tab=drill]) main>.felt{grid-column:1;padding:10px 14px;gap:8px}
+  body:is([data-tab=table],[data-tab=drill]) main>.side{grid-column:2;display:flex;flex-direction:column;gap:10px;align-self:center}
+  body:is([data-tab=table],[data-tab=drill]) .felt .pc{width:40px;height:56px;padding:3px 5px}
+  body:is([data-tab=table],[data-tab=drill]) .felt .pc b{font-size:15px}
+  body:is([data-tab=table],[data-tab=drill]) .felt .cards{min-height:56px}
+  body:is([data-tab=table],[data-tab=drill]) .felt .lbl+.cards{margin-top:3px}
+  body:is([data-tab=table],[data-tab=drill]) .felt .hand{padding:4px}
+  .chip i{width:54px;height:54px;font-size:18px}
+  .chips{gap:8px 4px}
+}
+h2{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.015em;margin:0;text-wrap:balance}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+/* the felt keeps its own light text in both themes */
+.felt{overflow-x:clip;--ink:#f6f3fb;--muted:rgba(240,234,250,.72);color:var(--ink);background:radial-gradient(ellipse at 50% 0%,var(--feltA),var(--feltB) 80%);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+/* stats strip: big value over a small label (see stat() in common.js) */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:6px 0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:9px 4px}
+.stats div{display:flex;flex-direction:column;align-items:center;text-align:center;font-size:11.5px;color:var(--muted);line-height:1.25}
+.stats b{font-size:17px;color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums;transition:color .3s}
+/* stat tones (tone.pct / tone.sign in common.js): how you're doing at a glance */
+.stats b.t-good{color:var(--good)}.stats b.t-warn{color:var(--warn)}.stats b.t-bad{color:var(--bad)}
+/* drill streak: the number pops when it goes up */
+.stats b[data-grow]{animation:grow .4s cubic-bezier(.3,1.6,.5,1)}
+@keyframes grow{35%{transform:scale(1.4)}}
+.lbl{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.lbl b{color:var(--ink);font-size:15px}
+.cards{display:flex;gap:6px;flex-wrap:wrap;min-height:74px}
+.lbl+.cards{margin-top:6px}
+/* hint toggle at the right end of the dealer label row (negative margins keep the row height) */
+.qbtn{margin:-5px 0 -5px auto;align-self:center;flex:none;width:28px;height:28px;border-radius:50%;border:0;padding:0;background:rgba(255,255,255,.16);color:#fff;font:inherit;font-size:15px;font-weight:700;line-height:1;cursor:pointer;transition:background .15s,color .15s}
+.qbtn:hover{background:rgba(255,255,255,.28)}
+/* one-time nudge next to the hint button (until a hint has been opened once) */
+.tipbub{margin-left:auto;align-self:center;font-size:12px;color:#fff;background:rgba(255,255,255,.14);padding:3px 9px;border-radius:99px;
+  white-space:nowrap;animation:tipin .4s ease-out .8s backwards, tipnudge 2.4s ease-in-out 1.4s infinite}
+.tipbub+.qbtn{margin-left:0}
+@keyframes tipin{from{opacity:0;transform:translateX(6px)}}
+@keyframes tipnudge{0%,80%,100%{transform:none}88%{transform:translateX(-3px)}94%{transform:translateX(1px)}}
+@media (prefers-reduced-motion:reduce){.tipbub{animation:none}}
+.qbtn.on{background:#fff;color:var(--feltB)}
+.pc{width:52px;height:74px;border-radius:8px;background:#fdfcf9;color:#1a1a1a;display:flex;flex-direction:column;justify-content:space-between;padding:4px 6px;box-shadow:0 1px 1px rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.18);font-variant-numeric:tabular-nums}
+.pc b{font-size:19px;line-height:1}
+.pc i{font-style:normal;font-size:22px;align-self:flex-end;line-height:1}
+.pc.red{color:#c42a20}
+.pc.back{background:var(--cardBack);border:3px solid #fdfcf9;box-shadow:inset 0 0 0 1.5px #d9a62a,0 1px 1px rgba(0,0,0,.18),0 3px 8px rgba(0,0,0,.18)}
+.sm .pc{width:38px;height:54px;padding:3px 4px;border-radius:6px}.sm .pc b{font-size:14px}.sm .pc i{font-size:15px}
+.sm .cards{min-height:54px;gap:4px}
+.big .pc{width:104px;height:148px;padding:10px 12px;border-radius:13px}.big .pc b{font-size:40px}.big .pc i{font-size:48px}
+.big .cards{justify-content:center;min-height:148px;padding:10px 0 14px}
+.seats{display:flex;gap:14px;flex-wrap:wrap}
+.seat{display:flex;flex-direction:column}
+.hands{display:flex;gap:16px;flex-wrap:wrap}
+.hand{display:flex;flex-direction:column;padding:6px;border-radius:12px;border:2px solid transparent}
+.hand.act{border-color:var(--accent)}
+/* bet stack at the end of the hand's card row, bottom-aligned: small purple chips with gold edge spots, stacked upward */
+.stack{position:relative;align-self:flex-end;flex:none;width:22px;height:22px;margin:0 0 2px 6px;pointer-events:none}
+.mini{--k:var(--brand);--spot:var(--accent);position:absolute;right:0;bottom:calc(var(--i) * 4px);width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle closest-side,var(--k) 0 60%,color-mix(in srgb,var(--spot) 80%,transparent) 64% 68%,transparent 72%),
+    repeating-conic-gradient(from -9deg,var(--spot) 0deg 16deg,var(--k) 18deg 43deg,var(--spot) 45deg);
+  box-shadow:0 1px 0 rgba(0,0,0,.35),0 2px 4px rgba(0,0,0,.3)}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:rgba(0,0,0,.3);color:var(--ink)}
+.tag.win{background:#1f7a45}.tag.lose{background:#9a2f27}.tag.push{background:#5c5c63}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.b{font:inherit;font-weight:600;padding:12px 16px;border-radius:12px;border:0;background:var(--surface2);color:var(--ink);cursor:pointer;min-width:84px;flex:1 1 auto;white-space:nowrap;transition:background .15s,transform .1s}
+button.b:hover{background:var(--surface2h)}
+button.b:active{transform:scale(.98)}
+button.b.primary{background:var(--accent);color:var(--onAccent)}
+button.b.primary:hover{filter:brightness(1.05)}
+.btns.mid{justify-content:center}
+p.small{font-size:13px;line-height:1.4;max-width:46ch;margin-inline:auto;text-wrap:pretty}
+/* table welcome screen: logo on the felt, then three starting-point cards (the last is the gold primary) */
+.felt.welcome{align-items:center;text-align:center;padding:26px 20px 22px;gap:6px}
+.wmk{width:84px;height:84px;margin:-6px 0 -4px}
+.tag-line{margin:0;font-size:16px;max-width:30ch;text-wrap:balance}
+.starts{display:flex;flex-direction:column;gap:10px}
+.start{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:0;border-radius:16px;
+  padding:14px 16px;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line);transition:transform .12s,background .15s}
+.start:hover{background:var(--surface2)}
+.start:active{transform:scale(.98)}
+.start b{display:block;font-size:16px;font-weight:650}
+.start small{display:block;color:var(--muted);font-size:13.5px;margin-top:1px}
+.start .si{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand)}
+.start .si svg{width:22px;height:22px}
+.start.primary{background:var(--accent);color:var(--onAccent);box-shadow:none}
+.start.primary:hover{filter:brightness(1.05)}
+.start.primary small{color:color-mix(in srgb,var(--onAccent) 72%,transparent)}
+.start.primary .si{background:rgba(255,255,255,.3);color:var(--onAccent)}
+.starts .newbie{align-self:center;margin-top:2px}
+/* how-to-play page */
+.panel.guide h2{font-size:18px}
+.panel.guide p{margin:0}
+.panel.guide ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.panel.guide ul.opts{list-style:none;padding:0}
+.panel.guide .pill{min-width:84px;text-align:center;margin-right:6px}
+/* secondary button: outlined, so it still reads as tappable next to the gold primary */
+button.b.ghost{background:none;flex:0 0 auto;min-width:0;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+button.b.ghost:hover{background:var(--surface2)}
+/* destructive (reset stats): red outline; data-confirm arms it on the first tap (solid red), the second tap acts */
+button.b.danger{color:var(--bad);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--bad) 45%,transparent)}
+button.b.danger:hover{background:color-mix(in srgb,var(--bad) 10%,transparent)}
+button.b.danger.armed{background:var(--bad);color:#fff;box-shadow:none}
+button.b:disabled{opacity:.4;cursor:default;transform:none}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* decision chips: fixed 3 + 2 grid (Hit Stand Double / Split Surrender); letters match the chart codes */
+.chips{display:grid;grid-template-columns:repeat(6,1fr);gap:12px 4px;padding:4px 0}
+.chip{grid-column:span 2;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.chip.kP,.chip.kR{grid-column:span 3}
+.chips.nosur .kP{grid-column:span 6}
+/* casino chip: solid center (--k), thin white ring, then a rim with 8 white edge spots (--spot).
+   Every color stop has a ~1px soft edge (2-3% of the radius, 1.5deg at the rim): hard gradient stops
+   alias into jagged edges at this size on phones. */
+.chip i{--k:var(--cH);--spot:#fff;position:relative;width:64px;height:64px;border-radius:50%;color:#fff;font-style:normal;font-size:21px;font-weight:700;display:grid;place-items:center;
+  background:
+    radial-gradient(circle closest-side,var(--k) 0 72.5%,color-mix(in srgb,var(--spot) 75%,transparent) 75% 77%,transparent 79.5%),
+    repeating-conic-gradient(from -8.25deg,var(--spot) 0deg 15deg,var(--k) 16.5deg 43.5deg,var(--spot) 45deg);
+  box-shadow:0 1px 2px rgba(0,0,0,.2); /* no dark inner edge line: it darkened the spot tips so they looked short */
+  transition:transform .22s cubic-bezier(.3,1.6,.5,1),box-shadow .22s,filter .15s,opacity .2s}
+.kS i{--k:var(--cS)}.kD i{--k:var(--cD)}.kP i{--k:var(--cP)}.kR i{--k:var(--cR)}
+/* hover: lift and grow (mouse only, so taps on phones don't leave chips stuck enlarged) */
+@media (hover:hover){
+  .chip:not(:disabled):not([aria-disabled=true]):not(.right):hover i{transform:scale(1.12) translateY(-2px);filter:brightness(1.08);
+    box-shadow:0 8px 16px rgba(0,0,0,.22)}
+}
+.chip:not(:disabled):not([aria-disabled=true]):active i{transform:scale(.9);transition-duration:.06s}
+/* tap: bounce + a ripple ring in the chip's color (main.js adds .bump to the re-rendered chip) */
+.chip.bump i{animation:bump .4s cubic-bezier(.3,1.6,.5,1)}
+.chip.bump i::after{content:"";position:absolute;inset:0;border-radius:50%;animation:ripple .5s ease-out forwards}
+@keyframes bump{0%{transform:scale(.88)}55%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes ripple{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--k) 70%,transparent)}to{box-shadow:0 0 0 16px transparent}}
+/* after a drill mistake: the right chip pulses, the wrong one gets a ✗ badge, the rest fade */
+.chips.mark .chip.dim{opacity:.3;cursor:default}
+.chips.mark .chip.wrong{cursor:default;color:var(--muted)}
+.chips.mark .chip.wrong i::before{content:"✗";position:absolute;top:-5px;right:-5px;width:22px;height:22px;border-radius:50%;background:var(--bad);color:#fff;font-size:12px;display:grid;place-items:center;box-shadow:0 0 0 2px var(--bg);animation:pop .2s ease-out .15s backwards}
+/* the pulsing chip doesn't also grow on hover (its ring would reach the felt); chips paint above the felt either way */
+.chips{position:relative;z-index:1}
+.chip.right:hover i{filter:brightness(1.1)}
+.chip.right i::before{content:"";position:absolute;inset:-7px;border-radius:50%;border:3px solid var(--k);animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(.94);opacity:.95}50%{transform:scale(1.1);opacity:.3}}
+.center{text-align:center;margin:-4px 0 0}
+.chip:disabled{cursor:default;color:var(--muted);opacity:.55}
+.chip:disabled i{--k:var(--chipOff);--spot:var(--surface);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line);filter:none;transform:none;animation:none}
+.chip:focus-visible{outline:none}
+.chip:focus-visible i{outline:2px solid var(--accent);outline-offset:3px}
+.fb{border-radius:12px;padding:11px 14px;font-size:15px}
+.fb.info{background:color-mix(in srgb,var(--accent) 15%,var(--surface))}
+/* decision feedback toast: a child of the sticky <header>, placed exactly over the stats strip
+   (same top offset, width and min-height as .stats; taller messages extend down over the felt) */
+#toast{--tc:var(--good);position:absolute;top:calc(100% + 5px);left:0;right:0;width:calc(100% - 32px);max-width:728px;min-height:56px;margin:0 auto;
+  display:flex;gap:12px;align-items:center;padding:9px 8px 9px 12px;border-radius:14px;overflow:hidden;
+  transition:opacity .25s} /* glass surface: see .glass,#toast */
+#toast.bad{--tc:var(--bad)}
+#toast[hidden]{display:none}
+/* in-page result card (resultCard in common.js): the toast's look, as a static panel */
+.result{--tc:var(--good);display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--surface);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tc) 35%,var(--line))}
+.result.bad{--tc:var(--bad)}
+/* toast + result card: round status badge (white tick / cross on the status color, soft halo), title, details */
+:is(#toast,.result) .ti{flex:none;width:30px;height:30px;border-radius:50%;background:var(--tc);color:#fff;display:grid;place-items:center;box-shadow:0 0 0 4px color-mix(in srgb,var(--tc) 18%,transparent)}
+:is(#toast,.result) .ti svg{width:16px;height:16px}
+:is(#toast,.result) .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+:is(#toast,.result) .tt{font-weight:650;font-size:15px;line-height:1.3;color:var(--tc);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+:is(#toast,.result) .tb{font-size:14px;line-height:1.4;color:var(--ink)}
+#toast .tag.hint{background:var(--surface2);color:var(--muted);font-size:11px;font-weight:600;padding:1px 7px}
+#toast button{flex:none;align-self:flex-start;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;line-height:1;padding:5px 7px;border-radius:8px;cursor:pointer}
+#toast button:hover{color:var(--ink);background:var(--surface2)}
+/* correct answers auto-dismiss: a thin line drains along the bottom while the toast counts down */
+#toast.ok::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--tc);transform-origin:left;animation:drain 2s linear forwards}
+@keyframes drain{to{transform:scaleX(0)}}
+#toast.in{animation:toastin .24s cubic-bezier(.2,.8,.3,1)}
+#toast.bad.in{animation:toastin .24s cubic-bezier(.2,.8,.3,1),shake .36s ease-in-out .2s}
+#toast.out{opacity:0}
+@keyframes toastin{from{opacity:0;transform:translateY(-10px) scale(.98)}}
+@keyframes shake{20%{transform:translateX(-5px)}45%{transform:translateX(4px)}70%{transform:translateX(-2px)}}
+/* an action name in its chip color, used in feedback text */
+.pill{display:inline-block;padding:0 8px;border-radius:99px;color:#fff;font-weight:650;font-size:.92em;line-height:1.5;background:var(--cH)}
+.pill.kS{background:var(--cS)}.pill.kD{background:var(--cD)}.pill.kP{background:var(--cP)}.pill.kR{background:var(--cR)}
+/* count entry: ±5 pills, round −/+ buttons, a big readout you can drag sideways (main.js) */
+.stepper{display:flex;gap:8px;align-items:center;justify-content:center;padding:4px 0}
+.stepper button{font:inherit;font-weight:650;border:0;color:var(--ink);cursor:pointer;background:var(--surface2);transition:background .15s,transform .1s}
+.stepper button:hover{background:var(--surface2h)}
+.stepper button:active{transform:scale(.92)}
+.stepper .s5{min-height:44px;width:48px;border-radius:99px;font-size:13.5px;color:var(--muted)} /* 44px: comfortable tap target */
+.stepper .s1{width:52px;height:52px;border-radius:50%;font-size:26px;line-height:1;background:color-mix(in srgb,var(--brand) 14%,var(--surface2));color:var(--brand)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .stepper .s1{color:#c9b3f0}}
+:root[data-theme=dark] .stepper .s1{color:#c9b3f0}
+.stepper output{min-width:96px;text-align:center;font-family:var(--display);font-size:40px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  cursor:ew-resize;touch-action:pan-y;user-select:none;border-radius:12px;outline:none;padding:2px 6px}
+.stepper output:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+.stepper output.tick{animation:tick .16s ease-out}
+@keyframes tick{from{transform:scale(1.12)}}
+/* count drill setup: label + segmented picker per option */
+.opt{display:flex;flex-direction:column;gap:6px}
+.opt>span{font-size:13px;color:var(--muted)}
+/* run: progress line on the felt */
+.runbar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.runbar .bar{flex:1;background:rgba(255,255,255,.14)}
+.runbar .bar i{transition:width .25s ease-out}
+/* true count question: running ÷ decks = ? */
+.tdq{display:flex;align-items:center;justify-content:center;gap:12px;text-align:center}
+.tdq div{display:flex;flex-direction:column}
+.tdq b{font-family:var(--display);font-size:30px;font-variant-numeric:tabular-nums}
+.tdq span{font-size:12px;color:var(--muted)}
+.tdq i{font-style:normal;font-size:22px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px 20px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+.field .seg button{padding:8px 4px}
+.chk{display:flex;align-items:center;gap:10px;color:var(--ink);cursor:pointer;line-height:1.3}
+/* on/off settings: iOS-style switch (a styled checkbox); purple track when on, the knob slides across */
+input.switch{appearance:none;-webkit-appearance:none;flex:none;margin:0;width:46px;height:28px;border-radius:99px;cursor:pointer;
+  background:var(--surface2h);position:relative;transition:background .2s}
+input.switch::before{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.3,.8,.3,1)}
+input.switch:checked{background:var(--brand)}
+input.switch:checked::before{transform:translateX(18px)}
+/* beginner explanation under a setting; under a switch it lines up with the label text */
+.help{font-size:12.5px;line-height:1.4;color:var(--muted);text-wrap:pretty}
+.chk+.help{padding-left:56px}
+.tw{overflow-x:auto}
+table.ch{border-collapse:separate;border-spacing:2px;font-size:13px;font-variant-numeric:tabular-nums;width:100%;min-width:420px;table-layout:fixed}
+/* fixed layout: label column set here, the 10 upcard columns share the rest equally */
+table.ch tr:first-child th:first-child{width:3em}
+table.ch.hint{min-width:0}
+/* strategy chart: row labels stay put while a wide table scrolls sideways on phones; tapping a cell
+   lights its row and column (the rest dims) and shows the reason under the table */
+table.ch th:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}
+table.ch td[data-a]{cursor:pointer;transition:opacity .2s}
+table.ch.pick td:not(.x){opacity:.28}
+table.ch.pick th.on{color:var(--ink)}
+/* Progress page column charts (progress.js). One series per chart: --series, validated with the dataviz
+   palette checks in both modes. Columns <= 24px with 4px rounded tops on a square baseline, solid hairline
+   grid, value printed only on the latest column, tooltip per column, table view underneath. */
+:root{--series:light-dark(#6a42b0,#9374d6)}
+.cchart{display:flex;flex-direction:column;gap:6px;padding-left:34px}
+.cchart .plot{position:relative;height:150px}
+.cchart .gl{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.cchart .gl span{position:absolute;right:calc(100% + 6px);top:-8px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cchart .cols{position:absolute;inset:0;display:flex;gap:2px}
+.cchart .col{flex:1;display:flex;align-items:flex-end;justify-content:center;background:none;border:0;padding:0;cursor:default;border-radius:6px}
+.cchart button.col:hover,.cchart button.col:focus-visible{background:color-mix(in srgb,var(--series) 8%,transparent)}
+.cchart .col i{position:relative;width:min(24px,70%);background:var(--series);border-radius:4px 4px 0 0;font-style:normal}
+.cchart .col i b{position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);font-size:12px;font-weight:650;color:var(--ink);white-space:nowrap}
+.cchart .xl{display:flex;gap:2px}
+.cchart .xl span{flex:1;text-align:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tv summary{font-size:13px;color:var(--muted);cursor:pointer}
+.tv table{margin-top:6px}
+#tip{position:fixed;z-index:50;pointer-events:none;white-space:pre-line;font-size:12.5px;line-height:1.35;padding:6px 10px;border-radius:9px;
+  background:var(--ink);color:var(--bg);box-shadow:0 4px 14px rgba(0,0,0,.2);max-width:240px}
+#tip[hidden]{display:none}
+/* drill: Weakest spots, one card per situation (spotHTML in drill.js) */
+.spots{display:flex;flex-direction:column}
+.spot{display:flex;flex-direction:column;gap:5px;padding:12px 0;border-bottom:1px solid var(--line)}
+.spot:first-child{padding-top:2px}
+.spot:last-child{border-bottom:0}
+.sp-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.sp-top b{font-size:15.5px}
+.sp-top span{flex:none;font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.sp-top span.t-good{color:var(--good)}.sp-top span.t-warn{color:var(--warn)}.sp-top span.t-bad{color:var(--bad)}
+.sp-play{font-size:14px;line-height:1.45}
+.sp-play .pill{margin-right:4px}
+.sp-idx{font-size:13px;color:var(--muted)}
+.why{margin:0;font-size:14.5px;line-height:1.5}
+.why .pill{margin:0 4px}
+.panel.hintp{padding:12px 14px;gap:8px}
+.panel.hintp p{margin:0;font-size:14px}
+table.ch.hint tr:first-child th:first-child{width:5.6em}
+table.ch th{color:var(--muted);font-weight:600;padding:3px 4px;text-align:center}
+table.ch td{text-align:center;padding:5px 0;border-radius:5px;font-weight:600;color:#fff}
+table.ch th.on{color:var(--ink)}
+table.ch td.on{box-shadow:inset 0 0 0 2px var(--ink)}
+td.cH{background:var(--cH)}td.cS{background:var(--cS)}td.cD{background:var(--cD)}td.cP{background:var(--cP)}td.cR{background:var(--cR)}
+table.list{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+table.list td,table.list th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+table.list tr:last-child td{border-bottom:0}
+table.list th{color:var(--muted);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.bigNum{font-family:var(--display);font-size:36px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.fa{animation:pa .18s ease-out}.fb2{animation:pb .18s ease-out}
+@keyframes pa{from{transform:scale(.9);opacity:.3}to{transform:none;opacity:1}}
+@keyframes pb{from{transform:scale(.9);opacity:.3}to{transform:none;opacity:1}}
+/* new cards slide in from the shoe (top right); feedback and result tags pop in; views fade in on tab change.
+   Classes are added only to newly rendered things (fresh() in common.js), so re-renders don't replay them. */
+/* dealing: --fx/--fy (set by dealCards() in main.js) point back to the shoe; the card spins in from there and
+   settles with a slight overshoot. The hole card is dealt face down and flips over when revealed. */
+.pc.deal{position:relative;animation:deal .45s cubic-bezier(.22,.9,.3,1.05) backwards}
+@keyframes deal{
+  0%{opacity:0;transform:translate(var(--fx,40px),var(--fy,-30px)) rotate(-28deg) scale(.92)}
+  10%{opacity:1}
+  100%{opacity:1;transform:none}}
+.pc.flip{animation:flip .42s ease-in-out backwards}
+@keyframes flip{
+  0%{transform:perspective(500px) rotateY(180deg);background:var(--cardBack);color:transparent}
+  49.9%{background:var(--cardBack);color:transparent}
+  50%{background:#fdfcf9}
+  100%{transform:perspective(500px) rotateY(0)}}
+.pop{animation:pop .22s ease-out backwards}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}}
+.tag.pop{display:inline-block;animation:tagpop .3s cubic-bezier(.3,1.5,.5,1) .25s backwards}
+@keyframes tagpop{from{opacity:0;transform:scale(.5)}}
+.hand{transition:border-color .2s}
+@media (prefers-reduced-motion:reduce){.fa,.fb2,.deal,.flip,.pop,.tag.pop,#toast.in,#toast.bad.in,.chip.bump i,.chip.bump i::after,.chip.right i::before{animation:none}*{transition:none!important}}
+@media (max-width:420px){.pc{width:46px;height:66px}.pc b{font-size:17px}.big .pc{width:88px;height:126px}.big .pc b{font-size:34px}.big .pc i{font-size:40px}}
