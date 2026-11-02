@@ -55,7 +55,9 @@ public/            Copied as-is into dist/: PWA manifest, service worker (sw.js)
                    full-bleed (phones crop home-screen icons); favicon.svg is the rounded browser-tab version.
 ```
 
-**Hosting:** live at https://podkriznik.github.io/tally/ (repo github.com/podkriznik/tally, public). `.github/workflows/deploy.yml` runs the tests, builds and publishes `dist/` to GitHub Pages on every push to `main`. Git in this repo uses a repo-local personal identity (GitHub no-reply email), and the remote URL carries the `podkriznik` username so Git Credential Manager uses the personal login. The machine's global identity and saved GitHub login belong to the owner's employer; never commit or push with them. Commit messages carry no Claude co-author line.
+**Hosting:** live at https://podkriznik.github.io/tally/ (repo github.com/podkriznik/tally, public). `.github/workflows/deploy.yml` runs the tests, builds and publishes `dist/` to GitHub Pages on every push to `main`.
+
+**Branches:** work happens on `dev`. Commit and push there: `test.yml` runs the tests on GitHub, and nothing is deployed. `main` is the live app. Publishing means merging `dev` into `main` and pushing `main`; do it only when the owner says to publish. Afterwards, switch back to `dev`. Git in this repo uses a repo-local personal identity (GitHub no-reply email), and the remote URL carries the `podkriznik` username so Git Credential Manager uses the personal login. The machine's global identity and saved GitHub login belong to the owner's employer; never commit or push with them. Commit messages carry no Claude co-author line.
 
 **PWA:** `main.js` registers `sw.js` only in production builds served over http(s), so dev, file:// and the artifact skip it. Service workers need HTTPS (localhost is exempt), so offline use on the phone needs a hosted build. Bump `VERSION` in `sw.js` when you change its caching logic.
 

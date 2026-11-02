@@ -1,0 +1,24 @@
+# Run the engine tests and a build on the development branch, so a break shows up as a red ✗ on GitHub
+# before it reaches main. Nothing is deployed from here: publishing happens in deploy.yml on main.
+name: Test
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build # runs the tests first, then builds
