@@ -30,6 +30,8 @@ export function render() {
       'Extra players don\'t change your odds, but their cards are more cards to count, like at a real table.')}
     ${sel('pace', 'Deal speed', [[1.6, 'Slow'], [1, 'Normal'], [0.45, 'Fast']],
       'How quickly cards are dealt and chips paid out. Slow is easier to count along with; fast is for drilling once you\'re comfortable.')}
+    ${sel('fbin', 'Feedback', [[1, 'By chips'], [0, 'Top banner']],
+      'Where right and wrong answers are explained. By chips: a card under the chips that floats over the page, so nothing moves. Top banner: a banner under the tabs.')}
     ${sel('ask', 'Ask for the count every … hands', [[0, 'Never'], [1, '1'], [3, '3'], [5, '5'], [10, '10']],
       'How often the table pauses after a hand to quiz you on the running count.')}
     ${chk('dev', 'Use index plays (Illustrious 18, Fab 4, insurance)',

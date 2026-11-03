@@ -3,7 +3,8 @@ import { SUITS, ACT, info, basic, devMatches } from '../engine.js';
 import { S, STP, store } from '../state.js';
 
 export const $ = id => document.getElementById(id);
-export const fmt = x => (x >= 0 ? '+' : '') + (Math.round(x * 10) / 10).toFixed(1);
+/** A true count with its sign, to one decimal: '+2.5', '-1', '+0' (whole numbers drop the '.0'). */
+export const fmt = x => { const r = Math.round(x * 10) / 10 || 0; return (r >= 0 ? '+' : '') + r; };
 export const sign = x => (x >= 0 ? '+' : '') + x;
 export const upName = u => (u === 11 ? 'A' : String(u));
 export const rnd = n => (Math.random() * n) | 0;
@@ -21,21 +22,58 @@ export function describe(c) {
   return (i.soft ? 'Soft ' : 'Hard ') + i.t;
 }
 
+const tcTxt = i => (i > 0 ? '+' : '') + i;
+
+/** An index rule as HTML, each play as a pill: "[Split] at TC ≥ +5". */
 export function idxText(e) {
-  const n = (e.i >= 0 ? '+' : '') + e.i;
-  return e.hi ? `${ACT[e.hi]} at TC ≥ ${n}` : `${ACT[e.lo]} at TC < ${n}`;
+  const n = tcTxt(e.i);
+  if (e.hi && e.lo) return `${actPill(e.hi)} at TC ≥ ${n}, ${actPill(e.lo)} below`;
+  return e.hi ? `${actPill(e.hi)} at TC ≥ ${n}` : `${actPill(e.lo)} at TC < ${n}`;
+}
+
+/** All index rules for one spot (devMatches, first match wins) as one rule. 15 v 10 with surrender has two
+ *  entries, which read as count ranges: "Stand at TC ≥ +4, Surrender from 0 to +3, Hit below 0". */
+const ranged = m => m.length === 2 && m[0].hi && m[1].hi && !m[0].lo && m[0].i > m[1].i;
+export function idxRule(m) {
+  if (ranged(m)) {
+    const [a, b] = m;
+    return `${actPill(a.hi)} at TC ≥ ${tcTxt(a.i)}, ${actPill(b.hi)} from ${tcTxt(b.i)} to ${tcTxt(a.i - 1)}` + (b.lo ? `, ${actPill(b.lo)} below ${tcTxt(b.i)}` : '');
+  }
+  return m.map(idxText).join('; ');
+}
+
+/** Why the count turns a play into action a (default: entry e's play above its index), in plain words.
+ *  Hi-Lo: a high count means more 10s and aces are left, a low one more small cards. It complements the
+ *  basic-strategy reason, which is right at a neutral count. */
+export function idxWhy(e, a = e.hi || e.lo) {
+  const up = e.u === 11 ? 'ace' : e.u, t = e.t;
+  if (e.k === 'p') return `With more 10s left, each 10 is likely to draw another one and the dealer's ${up} busts more often, so two hands beat one 20.`;
+  if (a === 'D') return 'With more 10s and aces left, one card is more likely to make a strong total, so doubling pays.';
+  if (a === 'S') return `With more 10s left, hitting ${t} busts more often, so standing becomes the better choice.`;
+  if (a === 'R') return `With more 10s left, hitting ${t} busts more often and the dealer's ${up} more often makes a strong hand, so getting half your bet back is better.`;
+  if (e.hi === 'R') return `With more small cards left, hitting ${t} busts less often, so it's worth playing on instead of giving up half your bet.`;
+  return `With more small cards left, hitting ${t} rarely busts and the dealer's ${up} busts less often, so hit instead of standing.`;
+}
+
+/** The reasons for a whole spot's index rules (see idxRule): each entry's high-count play, plus the
+ *  low-count play of a two-sided entry. A middle range that's basic strategy is explained by the basic reason. */
+export function idxSpotWhy(m) {
+  if (ranged(m)) return idxWhy(m[0]) + (m[1].lo ? ' ' + idxWhy(m[1], m[1].lo) : '');
+  return m.map(e => idxWhy(e) + (e.hi && e.lo ? ' ' + idxWhy(e, e.lo) : '')).join(' ');
 }
 
 /** An action name as a small pill in its chip color (H green, S red, ...). */
 export const actPill = a => `<b class="pill k${a[0]}">${ACT[a]}</b>`;
 
-/** Feedback text for a decision: r is the result of best(). */
-export function explain(r, c, up, tc, o) {
+/** Feedback text for a decision: r is the result of best(). idx: mention the spot's index rules
+ *  (on with index plays, and always in the drill's index mode). */
+export function explain(r, c, up, tc, o, idx = S.dev) {
   let s = `${describe(c)} vs ${upName(up)}: ${actPill(r.a)}`;
-  if (r.e) s += ` — index play, ${idxText(r.e)} (TC ${fmt(tc)}). Basic strategy says ${ACT[r.b]}.`;
-  else if (S.dev) {
-    const m = devMatches(c, up, S, o);
-    if (m.length) s += `. Index: ${m.map(idxText).join('; ')} (TC ${fmt(tc)}).`;
+  const m = r.e || idx ? devMatches(c, up, S, o) : [];
+  if (r.e && r.a !== r.b) {
+    s += `. At TC ${fmt(tc)} the index play applies: ${idxRule(m)}. ${idxWhy(r.e, r.a)} Basic strategy says ${actPill(r.b)}.`;
+  } else if (m.length) {
+    s += `. With the count: ${idxRule(m)}. At TC ${fmt(tc)} that's ${actPill(r.a)}, the same as basic strategy.`;
   }
   return s;
 }
@@ -44,21 +82,23 @@ const UPS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
 /** Round "?" button for the felt's dealer label row; toggles the hint panel. Until you've opened a hint
  *  once (tally_tip), a small "Not sure? Tap ?" bubble sits next to it. */
-export const hintBtn = (act, open) =>
-  (store.get('tally_tip', 0) ? '' : '<span class="tipbub" aria-hidden="true">Not sure? Tap <b>?</b></span>') +
-  `<button class="qbtn${open ? ' on' : ''}" data-a="${act}" aria-label="${open ? 'Hide hint' : 'Hint'}" aria-pressed="${open}" title="Hint">?</button>`;
+export const hintBtn = (act, open, off = false) =>
+  (store.get('tally_tip', 0) ? '' : `<span class="tipbub${off ? ' off' : ''}" aria-hidden="true">Not sure? Tap <b>?</b></span>`) + (off
+    // answered: the button (and the nudge) go invisible but keep their space, so the felt doesn't change height
+    ? '<button class="qbtn off" disabled tabindex="-1" aria-hidden="true">?</button>'
+    : `<button class="qbtn${open ? ' on' : ''}" data-a="${act}" aria-label="${open ? 'Hide hint' : 'Hint'}" aria-pressed="${open}" title="Hint">?</button>`);
 /** The hint has been used: stop showing the nudge. */
 export const hintUsed = () => store.set('tally_tip', 1);
 
 /** Hint: this hand's basic strategy row (with its real options) against every upcard, the current one
  *  highlighted, plus index rules for the current upcard. Never reveals the count-dependent answer. */
-export function hintHTML(c, up, o, tc = null) {
+export function hintHTML(c, up, o, tc = null, idx = S.dev) {
   const cell = u => { const a = basic(c, u, S, o); return `<td class="c${a[0]}${u === up ? ' on' : ''}">${a}</td>`; };
   let h = `<div class="panel hintp"><h3>Hint · not scored</h3><div class="tw"><table class="ch hint">` +
     `<tr><th></th>${UPS.map(u => `<th${u === up ? ' class="on"' : ''}>${upName(u)}</th>`).join('')}</tr>` +
     `<tr><th>${describe(c)}</th>${UPS.map(cell).join('')}</tr></table></div>`;
-  const m = S.dev ? devMatches(c, up, S, o) : [];
-  if (m.length) h += `<p>Index vs ${upName(up)}: <b>${m.map(idxText).join('; ')}</b>. ${tc === null ? 'Apply it with your true count.' : `True count now <b>${fmt(tc)}</b>.`}</p>`;
+  const m = idx ? devMatches(c, up, S, o) : [];
+  if (m.length) h += `<p>Index vs ${upName(up)}: ${idxRule(m)}. ${tc === null ? 'Apply it with your true count.' : `True count now <b>${fmt(tc)}</b>.`}</p>`;
   return h + `</div>`;
 }
 
@@ -84,6 +124,20 @@ const badge = ok => `<span class="ti"><svg viewBox="0 0 24 24" fill="none" strok
  *  o = { ok, title, html }; pops in the first time o renders. */
 export const resultCard = o =>
   `<div class="result ${o.ok ? 'ok' : 'bad'}${pop(o)}">${badge(o.ok)}<div class="tx"><div class="tt">${o.title}</div><div class="tb">${o.html}</div></div></div>`;
+/** Feedback for a decision (table, insurance, bet, drill). With S.fbin it doesn't use the banner: it's kept
+ *  here and placeFeedback() shows it under the chips after each render. A correct answer fades after 2 s,
+ *  a mistake stays until the next action. Other messages ("Weak spots reset", ...) use toast(). */
+let inline = null, inlineT;
+export function feedback(fb) {
+  if (!S.fbin) return toast(fb);
+  hideToast();
+  inline = fb;
+  fb.t0 = Date.now();
+  if (fb.ok) inlineT = setTimeout(() => {
+    $('view').querySelector('.fbslot .result')?.classList.add('out');
+    inlineT = setTimeout(hideToast, 250);
+  }, 2000);
+}
 export function toast(fb) {
   const el = $('toast');
   clearTimeout(toastT);
@@ -98,8 +152,33 @@ export function toast(fb) {
 }
 export function hideToast() {
   clearTimeout(toastT);
+  clearTimeout(inlineT);
+  inline = null;
+  $('view')?.querySelector('.fbslot .result')?.remove();
   const el = $('toast');
   if (el) el.hidden = true;
+}
+
+/** After each render (main.js): put pending feedback into the view's .fbslot, the zero-height spot under
+ *  the chips (views add it with fbSlot), so the card floats over what's below and nothing moves. A re-render
+ *  rebuilds the card without replaying its entrance, and the drain line of a correct answer keeps its place.
+ *  A new mistake scrolls just enough to be seen. A view without a slot gets the banner. */
+export const fbSlot = '<div class="fbslot"></div>';
+export function placeFeedback() {
+  if (!inline) return;
+  const slot = $('view').querySelector('.fbslot');
+  if (!slot) { const fb = inline; hideToast(); toast(fb); return; }
+  const fb = inline, first = fresh(fb);
+  slot.innerHTML = `<div class="result ${fb.ok ? 'ok' : 'bad'}${first ? ' pop' : ''}" role="status" style="--el:${fb.t0 - Date.now()}ms">${badge(fb.ok)}` +
+    `<div class="tx"><div class="tt">${fb.title}${fb.hinted ? '<span class="tag hint">hint · not scored</span>' : ''}</div><div class="tb">${fb.html}</div></div></div>`;
+  if (first && !fb.ok) revealCard(slot.firstChild);
+}
+/** Scroll a new mistake card into view, but only when a real part of it (40px+) is below the screen: a tiny
+ *  scroll would just look like the page jumped. The card floats over the phone's tab bar (it's above the
+ *  header's layer), so that space counts as visible. */
+function revealCard(el) {
+  const hidden = el.getBoundingClientRect().bottom + 8 - innerHeight;
+  if (hidden > 40) scrollBy({ top: hidden, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 
 // Spoken labels for screen readers ("7 of hearts"); the visible rank/suit glyphs are hidden from them.
@@ -151,9 +230,14 @@ export function stepper(id, units = false) {
  *  so positions never move. Surrender is left out entirely when the rules don't offer it.
  *  mark = { right, wrong } after a mistake: the right chip pulses and stays tappable, the others get
  *  aria-disabled (main.js ignores those clicks) and the wrong one a ✗ badge. */
-export function actionBtns(act, o, canHit = true, mark = null) {
+/** The "Tap <play> to continue" line under the chips after a mistake. It's always rendered (invisible when
+ *  there's no mistake), so it never changes the height of the column and the chips stay put. */
+export const contLine = play =>
+  `<p class="muted center"${play ? '' : ' aria-hidden="true" style="visibility:hidden"'}>${play ? `Tap <b>${play}</b> to continue` : '&nbsp;'}</p>`;
+
+export function actionBtns(act, o, canHit = true, mark = null, good = null) {
   const b = (a, label, ok) => {
-    let cls = '', attr = ok ? '' : ' disabled';
+    let cls = a === good ? ' good' : '', attr = ok ? '' : ' disabled'; // good: the right answer just tapped (✓)
     if (mark && a === mark.right) cls = ' right';
     else if (mark && ok) { cls = a === mark.wrong ? ' wrong' : ' dim'; attr = ' aria-disabled="true"'; }
     return `<button class="chip k${a}${cls}" data-a="${act}:${a}"${attr} title="${label} (${a})"><i>${a}</i>${label}</button>`;

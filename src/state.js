@@ -6,7 +6,7 @@ export const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
 };
 
-export const DEFAULTS = { decks: 6, h17: false, das: true, sur: true, ra: false, pen: 0.75, bj: 1.5, others: 2, ask: 5, dev: true, showCount: false, bets: false, spread: 8, pace: 1 };
+export const DEFAULTS = { decks: 6, h17: false, das: true, sur: true, ra: false, pen: 0.75, bj: 1.5, others: 2, ask: 5, dev: true, showCount: false, bets: false, spread: 8, pace: 1, drmode: 0, fbin: 1 };
 
 /** What "I'm new" on the welcome screen switches to: basic strategy only, the count shown, a quiet table. */
 export const BEGINNER = { dev: false, showCount: true, bets: false, others: 1, pace: 1.6 };

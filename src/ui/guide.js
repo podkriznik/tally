@@ -48,7 +48,7 @@ export function render() {
   sec('Using Tally', `
     <ul>
       <li><b>Table</b>: play a full shoe with other players and keep the count. Every few hands you're asked for it.</li>
-      <li><b>Drill</b>: one decision at a time, focused on the spots you get wrong.</li>
+      <li><b>Drill</b>: one decision at a time, focused on the spots you get wrong. Switch it to <b>Index plays</b> to practice only the count-based plays and insurance.</li>
       <li><b>Count</b>: count down a deck against the clock, and convert running to true counts.</li>
       <li><b>Strategy</b>: the chart. Tap a cell to see why.</li>
       <li>Not sure? Tap <b>?</b> on the felt for a hint. After a mistake, tap the right chip to continue.</li>

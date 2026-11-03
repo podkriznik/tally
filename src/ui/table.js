@@ -1,7 +1,7 @@
 // Table tab: play hands from a shoe, keep the count, get feedback.
 import { info, basic, best, ACT, INS_IDX, Shoe, rampBet } from '../engine.js';
 import { S, app, store, STP, record, keyFor, BEGINNER, logDay } from '../state.js';
-import { fmt, sign, cardHTML, backHTML, totalTxt, stepper, explain, actionBtns, stat, tone, hintHTML, hintBtn, fresh, toast, hideToast, resultCard, hintUsed } from './common.js';
+import { fmt, sign, cardHTML, backHTML, totalTxt, stepper, explain, actionBtns, stat, tone, hintHTML, hintBtn, fresh, toast, feedback, hideToast, resultCard, hintUsed, fbSlot, contLine } from './common.js';
 
 const T = {
   shoe: null, phase: 'idle', dealer: [], hole: true, others: [], hero: [], hi: 0,
@@ -33,7 +33,7 @@ function placeBet() {
   const bet = Math.max(1, STP.bet || 1), tc = nextTC(), want = rampBet(tc, S.spread), ok = bet === want;
   T.st.bdec = (T.st.bdec || 0) + 1;
   if (ok) T.st.bok = (T.st.bok || 0) + 1;
-  toast({
+  feedback({
     ok, title: ok ? `Right bet: ${bet} unit${bet === 1 ? '' : 's'}` : `You bet ${bet} unit${bet === 1 ? '' : 's'}`,
     html: `True count ${fmt(tc)}${nextShuffle() ? ' (new shoe)' : ''}: the 1–${S.spread} ramp bets ${want} unit${want === 1 ? '' : 's'}.`,
   });
@@ -115,7 +115,7 @@ function heroAct(a) {
   T.hint = T.hinted = false;
   if (!hinted) { T.st.dec++; if (ok) T.st.ok++; logDay({ dec: 1, ok: ok ? 1 : 0 }); }
   record(keyFor(v, up, o, !!r.e), ok && !hinted);
-  toast({ ok, title: ok ? 'Correct' : `You chose ${ACT[a]}`, html: explain(r, v, up, tc, o), hinted });
+  feedback({ ok, title: ok ? 'Correct' : `You chose ${ACT[a]}`, html: explain(r, v, up, tc, o), hinted });
   if (ok) play(a);
   else { T.miss = { right: r.a, wrong: a }; app.render(); }
 }
@@ -142,7 +142,7 @@ function insAct(yes) {
   if (ok) T.st.ok++;
   logDay({ dec: 1, ok: ok ? 1 : 0 });
   T.ins = yes;
-  toast({
+  feedback({
     ok,
     title: ok ? 'Correct' : `You ${yes ? 'took' : 'declined'} insurance`,
     html: `Insurance: <b>${correct ? 'take it' : 'decline'}</b>` +
@@ -288,7 +288,7 @@ export function render() {
   if (T.phase === 'hero' && T.hint) { const x = T.hero[T.hi]; h = hintHTML(vals(x), d[0].v, opts(x), S.showCount ? sh.tc() : null); }
   h += `<div class="felt">`;
   if (T.shuffled) h += `<p class="muted">New shoe shuffled. Count starts at 0.</p>`;
-  h += `<div><div class="lbl">Dealer <b>${T.hole ? '' : totalTxt(dv)}</b>${T.phase === 'hero' && !T.miss ? hintBtn('hint', T.hint) : ''}</div><div class="cards">${cardHTML(d[0])}${T.hole ? backHTML(d[1]) : d.slice(1).map(cardHTML).join('')}</div></div>`;
+  h += `<div><div class="lbl">Dealer <b>${T.hole ? '' : totalTxt(dv)}</b>${T.phase === 'hero' ? hintBtn('hint', T.hint, !!T.miss) : ''}</div><div class="cards">${cardHTML(d[0])}${T.hole ? backHTML(d[1]) : d.slice(1).map(cardHTML).join('')}</div></div>`;
   if (T.others.length) {
     h += `<div class="seats sm">` + T.others.map((o, i) =>
       `<div class="seat"><div class="lbl">Player ${i + 1} <b>${totalTxt(vals(o))}</b></div><div class="cards">${o.c.map(cardHTML).join('')}</div></div>`).join('') + `</div>`;
@@ -310,7 +310,7 @@ export function render() {
   } else if (T.phase === 'hero') {
     const x = T.hero[T.hi], o = opts(x);
     h += actionBtns('act', o, !o.aceSplit, T.miss);
-    if (T.miss) h += `<p class="muted center">Tap <b>${ACT[T.miss.right]}</b> to continue</p>`;
+    h += contLine(T.miss && ACT[T.miss.right]);
   } else if (T.phase === 'result') {
     const n = T.res.net;
     h += `<div class="fb info${newRes ? ' pop' : ''}">${T.res.dbj ? 'Dealer blackjack. ' : ''}Round ${n > 0 ? 'won' : n < 0 ? 'lost' : 'pushed'}: <b>${sign(n)}</b> unit${Math.abs(n) === 1 ? '' : 's'}${T.ins ? ' (incl. insurance)' : ''}.</div>`;
@@ -326,5 +326,6 @@ export function render() {
     }
     h += `<div class="btns"><button class="b primary" data-a="deal" ${T.ask && !T.ask.done ? 'disabled' : ''}>Next hand</button></div>`;
   }
-  return h + `</div>`;
+  // decision feedback (S.fbin) floats here, under the chips or the round's result, over what's below
+  return h + fbSlot + `</div>`;
 }

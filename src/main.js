@@ -2,7 +2,7 @@
 // Buttons declare their action as data-a="name:arg1:arg2" → A[name](arg1, arg2).
 import './style.css';
 import { S, app, store, saveSettings, STP, BEGINNER } from './state.js';
-import { $, ruleSummary, hideToast, stpTxt, toast } from './ui/common.js';
+import { $, ruleSummary, hideToast, stpTxt, toast, placeFeedback } from './ui/common.js';
 import * as table from './ui/table.js';
 import * as drill from './ui/drill.js';
 import * as count from './ui/count.js';
@@ -36,7 +36,8 @@ function blocks() {
   const seen = {}, m = new Map();
   // .side (the right column on wide screens) is a wrapper: track its children, not the wrapper
   for (const el of $('view').querySelectorAll(':scope > :not(.side), :scope > .side > *')) {
-    const cls = el.className.replace(/\b(pop|enter)\b/g, '').trim(), n = (seen[cls] = (seen[cls] || 0) + 1);
+    // state classes don't change a block's identity (.chips.mark after a mistake is still the chips)
+    const cls = el.className.replace(/\b(pop|enter|mark)\b/g, '').replace(/\s+/g, ' ').trim(), n = (seen[cls] = (seen[cls] || 0) + 1);
     m.set(`${el.tagName}.${cls}#${n}`, el);
   }
   return m;
@@ -122,6 +123,7 @@ function render() {
   $('prog').classList.toggle('on', app.tab === 'progress');
   $('rulesum').textContent = ruleSummary();
   $('view').innerHTML = PAGES[app.tab] ? PAGES[app.tab]() : TABS.find(t => t[0] === app.tab)[2]();
+  placeFeedback(); // a pending mistake goes under the chips (common.js)
   // The tapped chip was just replaced by the re-render: play the press bounce on its replacement.
   if (bump) {
     $('view').querySelector(`.chip[data-a="${bump}"]`)?.classList.add('bump');
@@ -344,7 +346,7 @@ function setOption(k, v, later = false) {
   S[k] = v;
   saveSettings();
   if (['decks', 'pen'].includes(k)) table.resetShoe();
-  if (['dev', 'sur', 'das', 'h17', 'decks'].includes(k)) drill.resetDrill();
+  if (['dev', 'sur', 'das', 'h17', 'decks', 'drmode'].includes(k)) drill.resetDrill();
   if (later) setTimeout(render, 200); else render();
 }
 A.setopt = (k, v) => setOption(k, +v);
@@ -379,8 +381,8 @@ document.addEventListener('keydown', e => {
   let sel = null;
   if ('HSDPR'.includes(k) && k.length === 1) sel = `.chip[data-a$=":${k}"]`;
   else if (k === '?') sel = '.qbtn';
-  else if (k === 'Y') sel = '[data-a="ins:1"]';
-  else if (k === 'N') sel = '[data-a="ins:0"]';
+  else if (k === 'Y') sel = '[data-a$="ins:1"]'; // table (ins:) and the index drill (drins:)
+  else if (k === 'N') sel = '[data-a$="ins:0"]';
   else if (k === 'Enter' || k === ' ') {
     if (e.target.closest?.('button')) return; // a focused button handles its own Enter/Space
     sel = 'button.b.primary:not(:disabled), button.start.primary';

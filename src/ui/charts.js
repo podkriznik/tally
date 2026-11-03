@@ -3,7 +3,7 @@
 // play appears under that table, plus the index rule for that spot when index plays are on.
 import { basic, DEV, INS_IDX, handFor, devMatches } from '../engine.js';
 import { S, app } from '../state.js';
-import { upName, idxText, ruleSummary, actPill } from './common.js';
+import { upName, idxText, idxRule, idxSpotWhy, ruleSummary, actPill } from './common.js';
 
 const UPS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 let SEL = null; // { k: row key like 'h16' / 's7' / 'p8', u: upcard }
@@ -22,7 +22,7 @@ function why(kind, t, u, a) {
     return `Split: two hands starting from ${t} do better than one total of ${t * 2}${weak ? `, especially against a weak dealer card like ${up.split(' ')[1]}` : ''}.`;
   }
   if (kind === 'p') {
-    if (t === 10) return 'Stand: never split 10s. 20 is already a winning hand.';
+    if (t === 10) return 'Stand: 20 is already a winning hand, so don\'t break it up.';
     if (t === 9) return u === 7 ? 'Stand: 18 beats the 17 the dealer most likely ends on.' : 'Stand: 18 is the best you can do here; splitting 9s against a strong card makes two weaker hands.';
     if (t === 5) kind = 'h', t = 10; // a pair of 5s plays as hard 10
     else kind = 'h', t *= 2;
@@ -81,8 +81,8 @@ export function render() {
     if (sel) {
       const [, lab, c, t] = sel, a = basic(c, SEL.u, S, o);
       const m = S.dev ? devMatches(c, SEL.u, S, { canDouble: true, canSplit: true, canSurrender: S.sur }) : [];
-      note = `<p class="why"><b>${lab} vs ${upName(SEL.u)}</b> ${actPill(a)} ${reason(kind, t, SEL.u, a)}` +
-        (m.length ? ` <span class="muted">Index: ${m.map(idxText).join('; ')}.</span>` : '') + `</p>`;
+      note = `<p class="why"><b>${lab} vs ${upName(SEL.u)}</b> ${actPill(a)} ${reason(kind, t, SEL.u, a)}</p>` +
+        (m.length ? `<p class="why muted">With the count: ${idxRule(m)}. ${idxSpotWhy(m)}</p>` : '');
     }
     return `<div class="panel"><h3>${title}</h3><div class="tw"><table class="ch${sel ? ' pick' : ''}">${head}${body}</table></div>${note}</div>`;
   };
