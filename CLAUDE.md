@@ -31,8 +31,10 @@ src/ui/common.js   View helpers (cardHTML, stepper, explain, hintHTML, ruleSumma
                    hint replaces the stats strip (top of the view) and closes when you answer.
 src/ui/table.js    Table play: shoe, other players, hero hand, insurance, count checks.
 src/ui/drill.js    Strategy drill, weighted toward missed situations. Two modes (S.drmode, picker at the top):
-                   basic strategy, or index plays only (each DEV spot plus insurance, key 'INS|11|i', at a
-                   TC within 2 of its index; always shows the count, whatever S.dev says). Weakest spots (spotHTML) rebuilds each
+                   basic strategy only (no count), or index plays only (each DEV spot plus insurance, key
+                   'INS|11|i', at a TC within 2 of its index). S.dev ("Use index plays at the table") only
+                   affects the table; index rules in Weakest spots and the Strategy tab are always shown,
+                   labelled "With the count". Weakest spots (spotHTML) rebuilds each
                    stats key into the situation, your record, the correct play + reason() from charts.js,
                    and its index rule.
 src/ui/count.js    Deck countdown (options are segmented pickers, data-a="cdopt:<key>:<value>") + true count drill.

@@ -34,8 +34,8 @@ export function render() {
       'Where right and wrong answers are explained. By chips: a card under the chips that floats over the page, so nothing moves. Top banner: a banner under the tabs.')}
     ${sel('ask', 'Ask for the count every … hands', [[0, 'Never'], [1, '1'], [3, '3'], [5, '5'], [10, '10']],
       'How often the table pauses after a hand to quiz you on the running count.')}
-    ${chk('dev', 'Use index plays (Illustrious 18, Fab 4, insurance)',
-      'Change a few plays when the true count says so, like standing on 16 against a 10 when the count is 0 or higher. New to the game? Turn this off and learn basic strategy first.')}
+    ${chk('dev', 'Use index plays at the table',
+      'At the table, grade your decisions with the Illustrious 18, Fab 4 and insurance: a few plays change when the true count says so, like standing on 16 against a 10 at 0 or higher. Off: plain basic strategy. The drill has its own Basic strategy and Index plays modes.')}
     ${chk('showCount', 'Show the count at the table (training wheels)',
       'Shows the running and true count while you play. Handy while you learn; turn it off to practise for real.')}
     ${chk('bets', 'Practise betting (bet spread)',

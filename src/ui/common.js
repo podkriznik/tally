@@ -66,7 +66,7 @@ export function idxSpotWhy(m) {
 export const actPill = a => `<b class="pill k${a[0]}">${ACT[a]}</b>`;
 
 /** Feedback text for a decision: r is the result of best(). idx: mention the spot's index rules
- *  (on with index plays, and always in the drill's index mode). */
+ *  (at the table: the index plays setting; in the drill: its Index plays mode). */
 export function explain(r, c, up, tc, o, idx = S.dev) {
   let s = `${describe(c)} vs ${upName(up)}: ${actPill(r.a)}`;
   const m = r.e || idx ? devMatches(c, up, S, o) : [];

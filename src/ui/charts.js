@@ -1,6 +1,6 @@
 // Strategy tab: basic strategy tables for the current rules + index list.
 // Tapping a cell selects it: its row and column stay lit (the rest dims) and a one-line reason for the
-// play appears under that table, plus the index rule for that spot when index plays are on.
+// play appears under that table, plus the spot's index rule and why the count changes it.
 import { basic, DEV, INS_IDX, handFor, devMatches } from '../engine.js';
 import { S, app } from '../state.js';
 import { upName, idxText, idxRule, idxSpotWhy, ruleSummary, actPill } from './common.js';
@@ -80,7 +80,7 @@ export function render() {
     const sel = SEL && ROWS[kind].find(r => r[0] === SEL.k);
     if (sel) {
       const [, lab, c, t] = sel, a = basic(c, SEL.u, S, o);
-      const m = S.dev ? devMatches(c, SEL.u, S, { canDouble: true, canSplit: true, canSurrender: S.sur }) : [];
+      const m = devMatches(c, SEL.u, S, { canDouble: true, canSplit: true, canSurrender: S.sur }); // labelled, so always shown
       note = `<p class="why"><b>${lab} vs ${upName(SEL.u)}</b> ${actPill(a)} ${reason(kind, t, SEL.u, a)}</p>` +
         (m.length ? `<p class="why muted">With the count: ${idxRule(m)}. ${idxSpotWhy(m)}</p>` : '');
     }

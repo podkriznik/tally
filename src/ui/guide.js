@@ -44,7 +44,7 @@ export function render() {
       <li>The higher the true count, the better your odds. Counters bet more when it's high and the minimum when it's low.</li>
     </ul>`) +
   sec('Index plays', `
-    <p>At certain true counts the best play changes. Standing on 16 against a 10 once the true count is 0 or higher is the most famous one. Tally uses the Illustrious 18 and the Fab 4 surrenders. Learn basic strategy first; you can turn index plays off in Settings.</p>`) +
+    <p>At certain true counts the best play changes. Standing on 16 against a 10 once the true count is 0 or higher is the most famous one. Tally uses the Illustrious 18 and the Fab 4 surrenders. Learn basic strategy first: index plays at the table can be turned off in Settings, and the drill has a separate Index plays mode for practising them.</p>`) +
   sec('Using Tally', `
     <ul>
       <li><b>Table</b>: play a full shoe with other players and keep the count. Every few hands you're asked for it.</li>

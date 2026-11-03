@@ -1,6 +1,6 @@
 // Strategy drill: single decisions, weighted toward the user's weak spots.
-// Two modes (S.drmode): 0 basic strategy (plus some index spots when index plays are on),
-// 1 index plays only: the Illustrious 18 + Fab 4 and insurance, at true counts near each index.
+// Two modes (S.drmode): 0 basic strategy only (no count), 1 index plays only: the Illustrious 18 + Fab 4
+// and insurance, at true counts near each index. The "index plays" setting (S.dev) is for the table only.
 import { info, best, basic, devMatches, DEV, ACT, INS_IDX, handFor } from '../engine.js';
 import { reason } from './charts.js';
 import { S, app, ST, record, keyFor, resetStats, store, logDay } from '../state.js';
@@ -62,23 +62,13 @@ function genIndex() {
 }
 
 function genScenario() {
-  let s, tc = 0;
   if (S.drmode) {
     const x = genIndex();
     return { c: x.c, cards: x.c.map(mkCard), up: x.up, upCard: mkCard(x.up), tc: x.tc, o: drillOpts(x.c), ins: !!x.ins };
   }
-  if (S.dev && Math.random() < 0.35) {
-    // Index-play situation, with a count near its index.
-    const e = pick(DEV.filter(e => !e.sur || S.sur));
-    s = { c: e.k === 'p' ? [10, 10] : handFor(e.t), up: e.u };
-    tc = e.i + pick([-2, -1, 0, 0, 1, 2]);
-  } else {
-    // Sample 30 candidates, weight each by the user's miss rate for that situation.
-    const cands = Array.from({ length: 30 }, genOne);
-    s = weighted(cands, x => keyFor(x.c, x.up, drillOpts(x.c), false));
-    tc = S.dev ? pick([-3, -2, -1, -1, 0, 0, 0, 1, 1, 2, 3, 4, 5, 6]) : 0;
-  }
-  return { c: s.c, cards: s.c.map(mkCard), up: s.up, upCard: mkCard(s.up), tc, o: drillOpts(s.c) };
+  // Sample 30 candidates, weight each by the user's miss rate for that situation.
+  const s = weighted(Array.from({ length: 30 }, genOne), x => keyFor(x.c, x.up, drillOpts(x.c), false));
+  return { c: s.c, cards: s.c.map(mkCard), up: s.up, upCard: mkCard(s.up), tc: 0, o: drillOpts(s.c) };
 }
 
 /** One Weakest spots entry: the situation and your record, the correct basic play with the Strategy tab's
@@ -91,10 +81,10 @@ function spotHTML(k, v) {
       <div class="sp-play">Basic strategy: <b>decline</b>. Insurance is a side bet that the hole card is a 10, and it loses more often than its 2:1 payout makes up for.</div>
       <div class="sp-idx">With the count: <b>take it at TC ≥ +${INS_IDX}</b>. With that many 10s left, the bet wins often enough to pay.</div></div>`;
   }
-  const [h, u, idx] = k.split('|'), up = +u, kind = h[0], n = +h.slice(1).replace('*', ''), multi = h.includes('*');
+  const [h, u] = k.split('|'), up = +u, kind = h[0], n = +h.slice(1).replace('*', ''), multi = h.includes('*');
   const cards = kind === 'P' ? [n, n] : kind === 'S' ? (n - 11 >= 2 ? [11, n - 11] : [11, 11]) : handFor(n);
   const o = multi ? { canDouble: false, canSplit: false, canSurrender: false } : { canDouble: true, canSplit: kind === 'P', canSurrender: S.sur };
-  const a = basic(cards, up, S, o), m = S.dev || idx ? devMatches(cards, up, S, o) : [];
+  const a = basic(cards, up, S, o), m = devMatches(cards, up, S, o); // index lines are labelled, so always shown
   const name = (kind === 'P' ? 'Pair of ' + (n === 11 ? 'aces' : n + 's') : (kind === 'S' ? 'Soft ' : 'Hard ') + n) + (multi ? ' (3+ cards)' : '');
   return `<div class="spot">
     <div class="sp-top"><b>${name} vs ${upName(up)}</b>${rec}</div>
@@ -107,7 +97,7 @@ function drillAct(a) {
   // After a mistake only the correct chip is tappable, and it moves on to the next hand.
   if (SD.fb) { if (!SD.fb.ok && a === SD.fb.right) next(); return; }
   if (s.ins) return;
-  const idx = !!S.drmode || S.dev, r = best(s.c, s.up, s.tc, S, s.o, idx), ok = a === r.a;
+  const idx = !!S.drmode, r = best(s.c, s.up, s.tc, S, s.o, idx), ok = a === r.a;
   // index mode keys every answer as an index spot (|i), so the spot's weighting doesn't depend on the count
   score(keyFor(s.c, s.up, s.o, !!S.drmode || !!r.e), ok,
     { right: r.a, wrong: a, title: ok ? 'Correct' : `You chose ${ACT[a]}`, html: explain(r, s.c, s.up, s.tc, s.o, idx) });
@@ -175,7 +165,7 @@ export function render() {
   let h = SD.hint
     ? (s.ins
       ? `<div class="panel hintp"><h3>Hint · not scored</h3><p>Basic strategy never takes insurance. Counters take it at a true count of <b>+${INS_IDX}</b> or more.</p></div>`
-      : hintHTML(s.c, s.up, o, null, idx || S.dev))
+      : hintHTML(s.c, s.up, o, null, idx))
     : `<div class="stats">${stat('this session', `${ss.ok}/${ss.n}`)}${stat('correct', ss.n ? Math.round((ss.ok / ss.n) * 100) + '%' : '–', tone.pct(ss.ok, ss.n))}` +
       `${stat('streak', SD.streak, streakAttr)}${stat('best streak', SD.best)}</div>`;
   // mode picker under the stats strip: the toast is sized to cover the strip, right under the tab bar
@@ -183,7 +173,7 @@ export function render() {
     `<button data-a="setopt:drmode:${v}" class="${S.drmode == v ? 'on' : ''}">${t}</button>`).join('')}</div>`;
   h += `<div class="felt"><div><div class="lbl">Dealer shows${hintBtn('drhint', SD.hint, !!SD.fb)}</div><div class="cards">${cardHTML(s.upCard)}</div></div>
     <div><div class="lbl">Your hand <b>${totalTxt(s.c)}</b></div><div class="cards">${s.cards.map(cardHTML).join('')}</div></div>
-    ${S.dev || idx ? `<div class="lbl">True count <b>${s.tc >= 0 ? '+' : ''}${s.tc}</b></div>` : ''}</div>`;
+    ${idx ? `<div class="lbl">True count <b>${s.tc >= 0 ? '+' : ''}${s.tc}</b></div>` : ''}</div>`;
   // feedback text goes to the toast (a mistake: under the chips, see fbSlot); after a mistake the chips show the right play and wait for it
   const miss = SD.fb && !SD.fb.ok;
   h += `<div class="side">`; // .side: right column on wide screens

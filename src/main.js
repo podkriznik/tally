@@ -346,7 +346,7 @@ function setOption(k, v, later = false) {
   S[k] = v;
   saveSettings();
   if (['decks', 'pen'].includes(k)) table.resetShoe();
-  if (['dev', 'sur', 'das', 'h17', 'decks', 'drmode'].includes(k)) drill.resetDrill();
+  if (['sur', 'das', 'h17', 'decks', 'drmode'].includes(k)) drill.resetDrill();
   if (later) setTimeout(render, 200); else render();
 }
 A.setopt = (k, v) => setOption(k, +v);
@@ -357,7 +357,7 @@ A.beginner = () => {
   saveSettings();
   drill.resetDrill();
   render();
-  toast({ ok: true, title: 'Set up for beginners', html: 'Index plays off, the count shown at the table, one other player, slow dealing. Change any of it in Settings.' });
+  toast({ ok: true, title: 'Set up for beginners', html: 'Index plays off at the table, the count shown, one other player, slow dealing. Change any of it in Settings.' });
 };
 
 document.addEventListener('change', e => {
